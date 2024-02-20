@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
  
 def blackbox(lr, momentum, k,epochs):
     transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
@@ -10,7 +12,7 @@ def blackbox(lr, momentum, k,epochs):
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
 
-    batch_size = 3
+    batch_size = 32
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
     testloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
     
@@ -52,7 +54,7 @@ def blackbox(lr, momentum, k,epochs):
 
 
 
-    model = CIFAR10Model()
+    model = CIFAR10Model().to(device)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
 
@@ -60,6 +62,7 @@ def blackbox(lr, momentum, k,epochs):
         stop = 0
         for inputs, labels in trainloader:
             # forward, backward, and then weight update
+            inputs, labels = inputs.to(device), labels.to(device)  # Move data to GPU if available
             y_pred = model(inputs)
             loss = loss_fn(y_pred, labels)
             optimizer.zero_grad()
@@ -70,14 +73,18 @@ def blackbox(lr, momentum, k,epochs):
                 break
         acc = 0
         count = 0
+        stop = 0
         for inputs, labels in testloader:
+            inputs, labels = inputs.to(device), labels.to(device)  # Move data to GPU if available
             y_pred = model(inputs)
             acc += (torch.argmax(y_pred, 1) == labels).float().sum()
             count += len(labels)
+            if stop == k:
+                break
         acc /= count
         print("Epoch %d: model accuracy %.2f%%" % (epoch, acc*100))
     return acc
 
 
-blackbox(lr = 0.001, momentum = 0.9, k = 100, epochs = 20)
+blackbox(lr = 0.001, momentum = 0.9, k = 100, epochs = 5)
 # %%
