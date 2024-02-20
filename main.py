@@ -10,7 +10,7 @@ def blackbox(lr, momentum, k,epochs):
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
 
-    batch_size = 32
+    batch_size = 3
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
     testloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
     
@@ -56,7 +56,8 @@ def blackbox(lr, momentum, k,epochs):
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
 
-    for epoch in range(epoch):
+    for epoch in range(epochs):
+        stop = 0
         for inputs, labels in trainloader:
             # forward, backward, and then weight update
             y_pred = model(inputs)
@@ -64,7 +65,9 @@ def blackbox(lr, momentum, k,epochs):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-    
+            stop+=1
+            if stop == k:
+                break
         acc = 0
         count = 0
         for inputs, labels in testloader:
@@ -73,10 +76,8 @@ def blackbox(lr, momentum, k,epochs):
             count += len(labels)
         acc /= count
         print("Epoch %d: model accuracy %.2f%%" % (epoch, acc*100))
-    
-    torch.save(model.state_dict(), "cifar10model.pth")
     return acc
 
 
-blackbox(lr = 0.001, momentum = 0.9, k = 1000, epoch = 20)
+blackbox(lr = 0.001, momentum = 0.9, k = 100, epochs = 20)
 # %%
