@@ -62,6 +62,9 @@ model = CIFAR10Model().to(device)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
 
+#%%
+
+
 for epoch in range(epochs):
     stop = 0
     for inputs, labels in trainloader:
