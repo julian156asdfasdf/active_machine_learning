@@ -6,7 +6,7 @@ import torchvision
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
  
-def blackbox(lr, momentum, k,epochs):
+def blackbox(lr, momentum, k,epochs,drop1,drop2):
     transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
     
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
@@ -21,7 +21,7 @@ def blackbox(lr, momentum, k,epochs):
             super().__init__()
             self.conv1 = nn.Conv2d(3, 32, kernel_size=(3,3), stride=1, padding=1)
             self.act1 = nn.ReLU()
-            self.drop1 = nn.Dropout(0.3)
+            self.drop1 = nn.Dropout(drop1)
     
             self.conv2 = nn.Conv2d(32, 32, kernel_size=(3,3), stride=1, padding=1)
             self.act2 = nn.ReLU()
@@ -31,7 +31,7 @@ def blackbox(lr, momentum, k,epochs):
     
             self.fc3 = nn.Linear(8192, 512)
             self.act3 = nn.ReLU()
-            self.drop3 = nn.Dropout(0.5)
+            self.drop3 = nn.Dropout(drop2)
     
             self.fc4 = nn.Linear(512, 10)
     
@@ -51,8 +51,6 @@ def blackbox(lr, momentum, k,epochs):
             # input 512, output 10
             x = self.fc4(x)
             return x
-
-
 
     model = CIFAR10Model().to(device)
     loss_fn = nn.CrossEntropyLoss()
@@ -82,9 +80,10 @@ def blackbox(lr, momentum, k,epochs):
             if stop == k:
                 break
         acc /= count
-        print("Epoch %d: model accuracy %.2f%%" % (epoch, acc*100))
+    print("Epoch %d: model accuracy %.2f%%" % (epoch, acc*100))
     return acc
 
 
-blackbox(lr = 0.001, momentum = 0.9, k = 100, epochs = 5)
+for i in range(5):
+    blackbox(lr = 0.001, momentum = 0.9, k = 100, epochs = 5, drop1 = 0.1*(i+1), drop2=0.15*(i+1))
 # %%
