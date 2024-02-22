@@ -23,16 +23,19 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuff
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=True)
 
 
-def black_box(lr, momentum, drop1, drop2):
+def black_box(kernel_sizea, drop1, drop2):
  
     class CIFAR10Model(nn.Module):
         def __init__(self):
             super().__init__()
-            self.conv1 = nn.Conv2d(3, 32, kernel_size=(3,3), stride=1, padding=1)
+            kernel_sizeb = int(kernel_sizea)
+            if kernel_sizeb % 2 == 0:
+                kernel_sizeb += 1
+            self.conv1 = nn.Conv2d(3, 32, kernel_size=(kernel_sizeb,kernel_sizeb), stride=1, padding=kernel_sizeb//2)
             self.act1 = nn.ReLU()
             self.drop1 = nn.Dropout(drop1)
 
-            self.conv2 = nn.Conv2d(32, 32, kernel_size=(3,3), stride=1, padding=1)
+            self.conv2 = nn.Conv2d(32, 32, kernel_size=(kernel_sizeb,kernel_sizeb), stride=1, padding=kernel_sizeb//2)
             self.act2 = nn.ReLU()
             self.pool2 = nn.MaxPool2d(kernel_size=(2, 2))
 
@@ -63,7 +66,7 @@ def black_box(lr, momentum, drop1, drop2):
 
     model = CIFAR10Model().to(device)
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+    optimizer = optim.SGD(model.parameters(), lr=0.001)
 
 
 
@@ -101,7 +104,7 @@ from bayes_opt import BayesianOptimization
 # Bounded region of parameter space
 pbounds = {'x': (2, 4), 'y': (-3, 3)}
 
-pbounds = {'lr': (1e-5, 1), 'momentum':(1e-5, 1) , 'drop1':(1e-5, 1) , 'drop2':(1e-5, 1)}
+pbounds = {'kernel_sizea': (1, 7), 'drop1':(1e-5, 1) , 'drop2':(1e-5, 1)}
 
 optimizer = BayesianOptimization(
     f=black_box,
