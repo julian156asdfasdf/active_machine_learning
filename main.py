@@ -6,8 +6,9 @@ import torchvision
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-#lr = 0.001
-#momentum = 0.9 
+lr = 0.034229425606054076
+momentum = 0.7088219923502673 
+
 #drop1 = 0.3 
 #drop2=0.5
 
@@ -23,7 +24,8 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuff
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=True)
 
 
-def black_box(lr, momentum, drop1, drop2):
+def black_box(drop1,drop2,linout):
+    linout = int(linout)
  
     class CIFAR10Model(nn.Module):
         def __init__(self):
@@ -38,11 +40,11 @@ def black_box(lr, momentum, drop1, drop2):
 
             self.flat = nn.Flatten()
 
-            self.fc3 = nn.Linear(8192, 512)
+            self.fc3 = nn.Linear(8192, linout)
             self.act3 = nn.ReLU()
             self.drop3 = nn.Dropout(drop2)
 
-            self.fc4 = nn.Linear(512, 10)
+            self.fc4 = nn.Linear(linout, 10)
 
         def forward(self, x):
             # input 3x32x32, output 32x32x32
@@ -99,9 +101,8 @@ def black_box(lr, momentum, drop1, drop2):
 from bayes_opt import BayesianOptimization
 
 # Bounded region of parameter space
-pbounds = {'x': (2, 4), 'y': (-3, 3)}
 
-pbounds = {'lr': 0.01, 'momentum':0.9 , 'drop1':0.3 , 'drop2':0.3}
+pbounds = {'drop1': (1e-4, 0.8), 'drop2':(1e-5, 0.8) , 'linout':(10, 4000) }
 
 #lr = 0.001
 #momentum = 0.9 
@@ -114,10 +115,7 @@ optimizer = BayesianOptimization(
 )
 
 
-optimizer.probe(
-    {'lr': (1e-5, 0.2), 'momentum':(1e-5, 1) , 'drop1':(1e-5, 1) , 'drop2':(1e-5, 1)}
-)
-
+    
 optimizer.maximize(
     init_points=8,
     n_iter=50,
@@ -129,6 +127,7 @@ optimizer.res
 import streamlit
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 targets = []
 drop1_vals = []
@@ -162,5 +161,20 @@ plt.title('momentum')
 plt.show()
 # %%
 
+def plot_bo(bo):
+    np.ones()
+    x = np.linspace(0.01, 1, 10000).reshape(-1,1)
+    mean, sigma = bo._gp.predict(x.reshape(-1, 1), return_std=True)
+    
+    plt.figure(figsize=(16, 9))
+    plt.plot(x, mean)
+    plt.fill_between(x, mean + sigma, mean - sigma, alpha=0.1)
+    plt.scatter(bo.space.params.flatten(), bo.space.target, c="red", s=50, zorder=10)
+    plt.show()
 
+plot_bo(optimizer)
+# %%
 
+optimizer._gp.predict([0.1,0.1,0.1])
+
+# %%
