@@ -101,7 +101,12 @@ from bayes_opt import BayesianOptimization
 # Bounded region of parameter space
 pbounds = {'x': (2, 4), 'y': (-3, 3)}
 
-pbounds = {'lr': (1e-5, 1), 'momentum':(1e-5, 1) , 'drop1':(1e-5, 1) , 'drop2':(1e-5, 1)}
+pbounds = {'lr': 0.01, 'momentum':0.9 , 'drop1':0.3 , 'drop2':0.3}
+
+#lr = 0.001
+#momentum = 0.9 
+#drop1 = 0.3 
+#drop2=0.5
 
 optimizer = BayesianOptimization(
     f=black_box,
@@ -109,10 +114,13 @@ optimizer = BayesianOptimization(
 )
 
 
+optimizer.probe(
+    {'lr': (1e-5, 0.2), 'momentum':(1e-5, 1) , 'drop1':(1e-5, 1) , 'drop2':(1e-5, 1)}
+)
 
 optimizer.maximize(
-    init_points=4,
-    n_iter=25,
+    init_points=8,
+    n_iter=50,
 )
 
 optimizer.res
@@ -120,18 +128,38 @@ optimizer.res
 
 import streamlit
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 targets = []
-values = []
+drop1_vals = []
+drop2_vals = []
+lr_vals = []
+momentum_vals = []
+
+
+
 for dic in optimizer.res:
     targets.append(dic['target'])
-    values.append(list(dic['params'].values()))
+    drop1_vals.append(dic['params']['drop1'])
+    drop2_vals.append(dic['params']['drop2'])
+    lr_vals.append(dic['params']['lr'])
+    momentum_vals.append(dic['params']['momentum'])
 
+plt.scatter( drop1_vals,targets)
+plt.title('drop1')
+plt.show()
 
-plt.plot(targets, )
+plt.scatter( drop2_vals,targets)
+plt.title('drop2')
+plt.show()
 
+plt.scatter( lr_vals,targets)
+plt.title('lr')
+plt.show()
 
+plt.scatter( momentum_vals,targets)
+plt.title('momentum')
+plt.show()
 # %%
 
 
