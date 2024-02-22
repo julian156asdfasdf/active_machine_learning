@@ -5,18 +5,18 @@ import torch.optim as optim
 import torchvision
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-lr = 0.001
-momentum = 0.9 
 
-drop1 = 0.3 
-drop2=0.5
+#lr = 0.001
+#momentum = 0.9 
+#drop1 = 0.3 
+#drop2=0.5
 
-k = 100 
+k = 1000
 epochs = 5 
-transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
+trainset = torchvision.datasets.CIFAR10(root='./data', train=True, transform=transform)
+testset = torchvision.datasets.CIFAR10(root='./data', train=False, transform=transform)
 
 batch_size = 32
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
@@ -91,7 +91,6 @@ def black_box(lr, momentum, drop1, drop2):
             if stop == k:
                 break
         acc /= count
-    print("Epoch %d: model accuracy %.2f%%" % (epoch, acc*100))
     return acc.item()
 
 
@@ -107,13 +106,33 @@ pbounds = {'lr': (1e-5, 1), 'momentum':(1e-5, 1) , 'drop1':(1e-5, 1) , 'drop2':(
 optimizer = BayesianOptimization(
     f=black_box,
     pbounds=pbounds,
-    random_state=1,
 )
+
 
 
 optimizer.maximize(
-    init_points=2,
-    n_iter=3,
+    init_points=4,
+    n_iter=25,
 )
 
+optimizer.res
 # %%
+
+import streamlit
+import matplotlib.pyplot as plt
+
+
+targets = []
+values = []
+for dic in optimizer.res:
+    targets.append(dic['target'])
+    values.append(list(dic['params'].values()))
+
+
+plt.plot(targets, )
+
+
+# %%
+
+
+
