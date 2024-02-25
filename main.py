@@ -117,8 +117,8 @@ optimizer = BayesianOptimization(
 
     
 optimizer.maximize(
-    init_points=8,
-    n_iter=50,
+    init_points=20,
+    n_iter=150,
 )
 
 optimizer.res
@@ -141,8 +141,7 @@ for dic in optimizer.res:
     targets.append(dic['target'])
     drop1_vals.append(dic['params']['drop1'])
     drop2_vals.append(dic['params']['drop2'])
-    lr_vals.append(dic['params']['lr'])
-    momentum_vals.append(dic['params']['momentum'])
+    lr_vals.append(dic['params']['linout'])
 
 plt.scatter( drop1_vals,targets)
 plt.title('drop1')
@@ -153,17 +152,15 @@ plt.title('drop2')
 plt.show()
 
 plt.scatter( lr_vals,targets)
-plt.title('lr')
+plt.title('linout')
 plt.show()
 
-plt.scatter( momentum_vals,targets)
-plt.title('momentum')
-plt.show()
 # %%
 
 def plot_bo(bo):
-    np.ones()
+
     x = np.linspace(0.01, 1, 10000).reshape(-1,1)
+    np.concatenate(x,  np.full_like(x, 0.5),  np.full_like(x, 2000))
     mean, sigma = bo._gp.predict(x.reshape(-1, 1), return_std=True)
     
     plt.figure(figsize=(16, 9))
